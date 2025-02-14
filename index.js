@@ -62,6 +62,37 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     })
+    // get all services by a specific user
+    app.get('/my-service/:email', async(req, res)=> {
+      const email = req.params.email;
+      const query = {email: email}
+      const result = await serviceCollection.find(query).toArray();
+      // console.log(result);
+      res.send(result);
+    })
+    // delete a service in my-service route
+    app.delete('/my-service-delete/:id', async(req, res)=> {
+      const id = req.params.id;
+      console.log("Received ID:", req.params.id);
+      const query = {_id: new ObjectId(id)}
+      const result = await serviceCollection.deleteOne(query);
+      console.log(result);
+      res.send(result);
+    })
+
+    // update a service in my-service-update route
+    app.put('/my-service-update/:id', async(req, res) => {
+      const id = req.params.id;
+      const serviceUpdateData = req.body;
+      const update = {
+        $set: serviceUpdateData,
+      }
+      const filter = {_id: new ObjectId(id)}
+      const options = {upsert: true}
+      const result = await reviewsCollection.updateOne( filter, update,options)
+      console.log(result);
+      res.send(result);
+  });
 
     // service details api
     app.get('/services/:id', async (req, res) => {
@@ -134,46 +165,23 @@ async function run() {
       res.send(result);
     })
 
-
-
-
-
-
-
-    // app.post('/services/:id/reviews', async (req, res) => {
-    //   const { id } = req.params;
-    //   const { userName, userPhoto, text, rating, date } = req.body;
-
-    //   const newReview = {
-    //     serviceId: id, // সার্ভিস আইডি সংরক্ষণ
-    //     userName,
-    //     userPhoto,
-    //     text,
-    //     rating,
-    //     date,
-    //   };
-
-    //   try {
-    //     const result = await reviewsCollection.insertOne(newReview);
-    //     res.status(201).json({ success: true, review: newReview });
-    //   } catch (error) {
-    //     console.error("Error adding review:", error);
-    //     res.status(500).json({ error: "Failed to add review" });
-    //   }
-    // });
-
-    // app.get('/services/:id/reviews', async (req, res) => {
-    //   const { id } = req.params;
-    //   try {
-    //     const reviews = await reviewsCollection.find({ serviceId: id }).toArray();
-    //     res.json(reviews);
-    //   } catch (error) {
-    //     console.error("Error fetching reviews:", error);
-    //     res.status(500).json({ error: "Failed to fetch reviews" });
-    //   }
-    // });
-
-
+    // countUp ___________________
+    app.get('/stats', async (req, res) => {
+      try {
+          const usersCount = await client.db('service_reviews').collection('users').countDocuments();
+          const reviewsCount = await client.db('service_reviews').collection('reviews').countDocuments();
+          const servicesCount = await client.db('service_reviews').collection('services').countDocuments();
+          
+          res.json({
+              users: usersCount,
+              reviews: reviewsCount,
+              services: servicesCount
+          });
+      } catch (error) {
+          console.error("Error fetching stats:", error);
+          res.status(500).json({ error: 'Failed to fetch stats' });
+      }
+    });
 
 
 
