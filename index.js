@@ -58,41 +58,51 @@ async function run() {
       const limit = parseInt(req.query.limit) || 0;
       // serviceCollection.find(): This method is used to search for documents in the MongoDB collection.
       // .limit(limit): This specifies how many service documents should be returned from MongoDB.
-      const cursor = serviceCollection.find().limit(limit);
+      const filter = req.query.filter
+      const search = req.query.search
+      console.log(search);
+      let query = {
+        title: {
+          $regex: search,
+          $options: 'i',
+        }
+      }
+      if (filter) query.category = filter
+      const cursor = serviceCollection.find(query).limit(limit);
       const result = await cursor.toArray();
       res.send(result);
     })
     // get all services by a specific user
-    app.get('/my-service/:email', async(req, res)=> {
+    app.get('/my-service/:email', async (req, res) => {
       const email = req.params.email;
-      const query = {email: email}
+      const query = { email: email }
       const result = await serviceCollection.find(query).toArray();
       // console.log(result);
       res.send(result);
     })
     // delete a service in my-service route
-    app.delete('/my-service-delete/:id', async(req, res)=> {
+    app.delete('/my-service-delete/:id', async (req, res) => {
       const id = req.params.id;
       console.log("Received ID:", req.params.id);
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await serviceCollection.deleteOne(query);
       console.log(result);
       res.send(result);
     })
 
     // update a service in my-service-update route
-    app.put('/my-service-update/:id', async(req, res) => {
+    app.put('/my-service-update/:id', async (req, res) => {
       const id = req.params.id;
       const serviceUpdateData = req.body;
       const update = {
         $set: serviceUpdateData,
       }
-      const filter = {_id: new ObjectId(id)}
-      const options = {upsert: true}
-      const result = await reviewsCollection.updateOne( filter, update,options)
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true }
+      const result = await reviewsCollection.updateOne(filter, update, options)
       console.log(result);
       res.send(result);
-  });
+    });
 
     // service details api
     app.get('/services/:id', async (req, res) => {
@@ -152,15 +162,15 @@ async function run() {
       res.send(result);
     })
     // update review data in db
-    app.put('/update-review/:id', async(req, res)=> {
+    app.put('/update-review/:id', async (req, res) => {
       const id = req.params.id;
       const reviewData = req.body;
       const update = {
         $set: reviewData,
       }
-      const filter = {_id: new ObjectId(id)}
-      const options = {upsert: true}
-      const result = await reviewsCollection.updateOne( filter, update,options)
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true }
+      const result = await reviewsCollection.updateOne(filter, update, options)
       // console.log(result);
       res.send(result);
     })
@@ -168,18 +178,18 @@ async function run() {
     // countUp ___________________
     app.get('/stats', async (req, res) => {
       try {
-          const usersCount = await client.db('service_reviews').collection('users').countDocuments();
-          const reviewsCount = await client.db('service_reviews').collection('reviews').countDocuments();
-          const servicesCount = await client.db('service_reviews').collection('services').countDocuments();
-          
-          res.json({
-              users: usersCount,
-              reviews: reviewsCount,
-              services: servicesCount
-          });
+        const usersCount = await client.db('service_reviews').collection('users').countDocuments();
+        const reviewsCount = await client.db('service_reviews').collection('reviews').countDocuments();
+        const servicesCount = await client.db('service_reviews').collection('services').countDocuments();
+
+        res.json({
+          users: usersCount,
+          reviews: reviewsCount,
+          services: servicesCount
+        });
       } catch (error) {
-          console.error("Error fetching stats:", error);
-          res.status(500).json({ error: 'Failed to fetch stats' });
+        console.error("Error fetching stats:", error);
+        res.status(500).json({ error: 'Failed to fetch stats' });
       }
     });
 
