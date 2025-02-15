@@ -58,9 +58,11 @@ async function run() {
       const limit = parseInt(req.query.limit) || 0;
       // serviceCollection.find(): This method is used to search for documents in the MongoDB collection.
       // .limit(limit): This specifies how many service documents should be returned from MongoDB.
-      const filter = req.query.filter
-      const search = req.query.search
-      console.log(search);
+
+      // filter and search starts here
+      const filter = req.query.filter // filter 
+      const search = req.query.search // search
+      // console.log(search);
       let query = {
         title: {
           $regex: search,
@@ -68,6 +70,7 @@ async function run() {
         }
       }
       if (filter) query.category = filter
+      // filter and search ends here
       const cursor = serviceCollection.find(query).limit(limit);
       const result = await cursor.toArray();
       res.send(result);
@@ -76,8 +79,16 @@ async function run() {
     app.get('/my-service/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
+      const search = req.query.search // search
+      console.log(search);
+    
+      if (search) {
+        query.category = {
+          $regex: search,
+          $options: "i",
+        }
+      }
       const result = await serviceCollection.find(query).toArray();
-      // console.log(result);
       res.send(result);
     })
     // delete a service in my-service route
