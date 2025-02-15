@@ -142,25 +142,10 @@ async function run() {
     app.get('/my-service/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
-
-      console.log(req.cookies);
-
-      // search functionality starts here
-      let search = req.query.search // search
-
-      if (!search || typeof search !== "string") {
-        search = "";
-      }
-      console.log(search);
-
-      if (search.trim() !== "") {
-        query.category = { $regex: search.trim(), $options: "i" };
-      }
-      // search functionality ends here
-
       const result = await serviceCollection.find(query).toArray();
       res.send(result);
     })
+
     // delete a service in my-service route
     app.delete('/my-service-delete/:id', async (req, res) => {
       const id = req.params.id;
