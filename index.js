@@ -5,7 +5,6 @@ require('dotenv').config();
 // json web token start here
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-
 // json web token end here
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -15,19 +14,21 @@ const port = process.env.PORT || 8000;
 
 // MiddleWare
 app.use(cors({
-  origin: ['http://localhost:5174', 'https://assignment-11-825ef.web.app/', 'https://assignment-11-825ef.firebaseapp.com/'],
+  origin: ['http://localhost:5173', 'https://assignment-11-825ef.web.app', 'https://assignment-11-825ef.firebaseapp.com'],
   credentials: true
 }));
 app.use(express.json());
 app.use(cookieParser());
 
+app.use((req, res, next) => {
+  console.log('Request from:', req.headers.origin);
+  next();
+});
+
 
 app.get('/', (req, res) => {
   res.send('Service reviews server side is running now');
 });
-
-// DB_USER: service_reviews
-// DB_PASSWORD: HoW8SG6yNsKbYliU
 
 
 
@@ -53,6 +54,7 @@ async function run() {
 
     // Service related APIS Collection 1:
     const serviceCollection = client.db('service_reviews').collection('services')
+
     // ServiceDetails related APIS collection 2:
     const reviewsCollection = client.db('service_reviews').collection('reviews');
 
@@ -115,33 +117,56 @@ async function run() {
       console.log(addData, result);
       res.send(result);
     })
+
     // get kore service page e add service er data gulo show kora holo.
     app.get('/services', async (req, res) => {
-      //req.query.limit: The limit is obtained from the URL query parameter, If the limit query is not provided, it will default to 0, meaning there is no limit.
       const limit = parseInt(req.query.limit) || 0;
-      // serviceCollection.find(): This method is used to search for documents in the MongoDB collection.
-      // .limit(limit): This specifies how many service documents should be returned from MongoDB.
 
       // filter and search starts here
-      const filter = req.query.filter // filter 
-      const search = req.query.search // search
-      // console.log(search);
-      let query = {
-        title: {
+      const filter = req.query.filter; // filter 
+      let search = req.query.search; // search
+
+      if (search && typeof search !== 'string') {
+        search = String(search);
+      }
+
+      let query = {};
+
+      if (search) {
+        query.title = {
           $regex: search,
           $options: 'i',
-        }
+        };
       }
-      if (filter) query.category = filter
+
+      if (filter) query.category = filter;
       // filter and search ends here
+
       const cursor = serviceCollection.find(query).limit(limit);
       const result = await cursor.toArray();
       res.send(result);
-    })
+    });
+
     // get all services by a specific user
     app.get('/my-service/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
+
+      console.log(req.cookies);
+
+      // search functionality starts here
+      let search = req.query.search // search
+
+      if (!search || typeof search !== "string") {
+        search = "";
+      }
+      console.log(search);
+
+      if (search.trim() !== "") {
+        query.category = { $regex: search.trim(), $options: "i" };
+      }
+      // search functionality ends here
+
       const result = await serviceCollection.find(query).toArray();
       res.send(result);
     })
@@ -171,7 +196,7 @@ async function run() {
     });
 
     // service details api
-    app.get('/services/:id', async (req, res) => {
+    app.get('/services/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
 
       // Check if ID is valid
@@ -197,7 +222,7 @@ async function run() {
     });
 
     // save a add-reviews data in database
-    app.post('/add-reviews', async (req, res) => {
+    app.post('/add-reviews',verifyToken, async (req, res) => {
       // 1. save data in reviews Collection
       const addReviews = req.body;
       const result = await reviewsCollection.insertOne(addReviews);
@@ -214,7 +239,8 @@ async function run() {
       console.log(updateReviewCount);
       res.send(result);
     })
-    app.get('/my-reviews/:email', async (req, res) => {
+
+    app.get('/my-reviews/:email',verifyToken, async (req, res) => {
       const email = req.params.email
       const query = { email }
       const result = await reviewsCollection.find(query).toArray();
@@ -258,11 +284,6 @@ async function run() {
         res.status(500).json({ error: 'Failed to fetch stats' });
       }
     });
-
-
-
-
-
 
 
 
