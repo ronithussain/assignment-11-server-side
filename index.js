@@ -222,7 +222,7 @@ async function run() {
     });
 
     // save a add-reviews data in database
-    app.post('/add-reviews',verifyToken, async (req, res) => {
+    app.post('/add-reviews', async (req, res) => {
       // 1. save data in reviews Collection
       const addReviews = req.body;
       const result = await reviewsCollection.insertOne(addReviews);
@@ -240,7 +240,7 @@ async function run() {
       res.send(result);
     })
 
-    app.get('/my-reviews/:email',verifyToken, async (req, res) => {
+    app.get('/my-reviews/:email', async (req, res) => {
       const email = req.params.email
       const query = { email }
       const result = await reviewsCollection.find(query).toArray();
