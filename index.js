@@ -196,7 +196,7 @@ async function run() {
     });
 
     // service details api
-    app.get('/services/:id',verifyToken, async (req, res) => {
+    app.get('/services/:id', async (req, res) => {
       const id = req.params.id;
 
       // Check if ID is valid
