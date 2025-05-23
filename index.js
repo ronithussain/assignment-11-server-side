@@ -14,7 +14,7 @@ const port = process.env.PORT || 8000;
 
 // MiddleWare
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://assignment-11-825ef.web.app', 'https://assignment-11-825ef.firebaseapp.com'],
+  origin: ['http://localhost:5173','http://localhost:5174', 'https://assignment-11-825ef.web.app', 'https://assignment-11-825ef.firebaseapp.com'],
   credentials: true
 }));
 app.use(express.json());
